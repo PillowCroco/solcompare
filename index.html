@@ -54,9 +54,12 @@ button,input,textarea,select{font:inherit;color:inherit}
 .btn[disabled]{opacity:.5;cursor:default}
 
 /* 본문 격자 */
-.layout{display:grid;grid-template-columns:120px minmax(0,1fr);gap:16px;padding-block:20px 60px}
-nav.list{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);align-self:start;max-height:calc(100vh - 90px);overflow:auto;font-size:.82rem}
-nav.list h4{margin:12px 0 4px;font-size:.7rem;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.layout{display:grid;grid-template-columns:134px minmax(0,1fr);gap:18px;padding-block:20px 60px}
+nav.list{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);align-self:start;max-height:calc(100vh - 100px);overflow:auto;font-size:.82rem;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 6px 8px}
+nav.list h4{margin:10px 0 3px;font-size:.7rem;letter-spacing:.06em;color:var(--muted);font-weight:600;
+  border-top:1px solid var(--line);padding-top:8px}
+nav.list h4:first-child{border-top:0;margin-top:2px;padding-top:2px}
 nav.list a{display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:6px;color:var(--fg);text-decoration:none}
 nav.list a:hover{background:var(--sunk)}
 nav.list a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
@@ -179,7 +182,7 @@ textarea[readonly]{background:var(--sunk)}
   .two{grid-template-columns:minmax(0,1fr)}
 }
 @media (prefers-reduced-motion: no-preference){.seg button{transition:background .12s}}
-.code{position:relative}.code summary{list-style:none}.code summary::-webkit-details-marker{display:none}.codebox{position:absolute;right:0;top:110%;z-index:6;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:min(92vw,360px);font-size:.85rem}.codebox input{width:12em;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}.codebox code{font-family:var(--f-mono);font-size:.8rem;word-break:break-all}
+.code{position:relative}.code summary{list-style:none}.code summary::-webkit-details-marker{display:none}.codebox{position:absolute;right:0;top:110%;z-index:6;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:min(92vw,430px);font-size:.85rem}.codebox p{margin:.35em 0}.codebox .sub summary{cursor:pointer;color:var(--muted);margin-top:6px}.codebox input{width:12em;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}.codebox code{font-family:var(--f-mono);font-size:.8rem;word-break:break-all}
 </style>
 </head>
 <body>
@@ -190,7 +193,7 @@ textarea[readonly]{background:var(--sunk)}
   <div class="sp"></div>
   <div class="me" id="me"><label class="empty" for="nick">이름</label><input id="nick" maxlength="30" placeholder="이름을 적어 주세요" autocomplete="nickname"><span class="chip" id="status">불러오는 중</span></div>
   <span class="chip" id="prog">0 / 0</span><span class="chip" id="adm" hidden>총관리자 · 모두 보임</span>
-  <details class="code"><summary class="btn">다른 기기에서 이어 쓰기</summary><div class="codebox"><p>이 기기의 참여 코드: <code id="mycode"></code> <button class="btn" id="copy" type="button">복사</button></p><p><label for="paste">다른 기기에서 받은 코드</label> <input id="paste" maxlength="40"> <button class="btn" id="usecode" type="button">이 코드로 이어 쓰기</button></p></div></details>
+  <details class="code"><summary class="btn">다른 기기에서 이어 쓰기</summary><div class="codebox"><p><b>이 브라우저에서는 그대로 이어집니다</b> — 다시 와서 이름을 적지 않아도 고른 것이 그대로 있습니다.</p><p>다른 기기(폰 등)에서 이어 하려면 <b>이어 쓰기 링크</b>를 그 기기에서 한 번 열어 주세요. 그 뒤로는 그 기기에서도 그대로 이어집니다.</p><p><button class="btn" id="copylink" type="button">이어 쓰기 링크 복사</button> <span class="saved" id="copied"></span></p><details class="sub"><summary>링크 대신 코드로</summary><p>이 기기의 참여 코드: <code id="mycode"></code> <button class="btn" id="copy" type="button">복사</button></p><p><label for="paste">다른 기기에서 받은 코드</label> <input id="paste" maxlength="40"> <button class="btn" id="usecode" type="button">이 코드로 이어 쓰기</button></p></details></div></details>
 </div></header>
 
 <div class="wrap"><div class="layout">
@@ -227,7 +230,14 @@ const PICK = {orig: '원본이 낫다', same: '비슷하다', claude: 'Claude가
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 function gen(){ const a = 'abcdefghijkmnpqrstuvwxyz23456789'; let s = ''; const r = new Uint32Array(20); crypto.getRandomValues(r); r.forEach(x => { s += a[x % a.length]; }); return s; }
-let myId = lsGet('tiq_rid'); if (!myId || !/^[A-Za-z0-9_-]{12,40}$/.test(myId)) { myId = gen(); lsSet('tiq_rid', myId); }
+const RID = /^[A-Za-z0-9_-]{12,40}$/;
+let myId = lsGet('tiq_rid');
+try {                                        // 이어 쓰기 링크(?u=…)로 들어오면 그 참여 코드를 쓴다 — 코드를 외우지 않게
+  const u0 = new URL(location.href), q = u0.searchParams.get('u');
+  if (q && RID.test(q)) { myId = q; lsSet('tiq_rid', q); u0.searchParams.delete('u');
+    history.replaceState(null, '', u0.pathname + u0.search + u0.hash); }
+} catch (e) {}
+if (!myId || !RID.test(myId)) { myId = gen(); lsSet('tiq_rid', myId); }
 let myName = lsGet('tiq_nick') || '';
 let canWrite = true;
 /* 총관리자 — 주소 끝에 ?k=<열쇠> 를 달고 한 번 열면 이 브라우저에 저장된다(주소에서는 지운다).
@@ -517,6 +527,12 @@ nick.addEventListener('change', () => {
   if (v && reviews[myId]) { Object.keys(reviews[myId].items || {}).slice(0, 1).forEach(pid => queue(pid, '_overall', {})); }
 });
 $('#mycode').textContent = myId;
+const resumeLink = () => location.origin + location.pathname + '?u=' + myId;
+$('#copylink').addEventListener('click', () => {
+  const u = resumeLink(), f = $('#copied');
+  if (navigator.clipboard) navigator.clipboard.writeText(u).then(() => { f.textContent = '복사했습니다'; }).catch(() => { f.textContent = u; });
+  else f.textContent = u;
+});
 $('#copy').addEventListener('click', () => { navigator.clipboard && navigator.clipboard.writeText(myId).catch(() => {}); });
 $('#usecode').addEventListener('click', () => {
   const c = $('#paste').value.trim();
