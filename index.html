@@ -31,7 +31,7 @@
   --paper:#f7f8fa; --warn:#f0a868; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--fg)}
-body{font-family:var(--f-body);font-size:15px;line-height:1.6;margin:0}
+body{font-family:var(--f-body);font-size:15px;line-height:1.6;margin:0;word-break:keep-all;overflow-wrap:break-word}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
 h1,h2,h3{font-family:var(--f-display);font-weight:700;text-wrap:balance;margin:0}
 button,input,textarea,select{font:inherit;color:inherit}
@@ -92,18 +92,19 @@ details.stem summary{cursor:pointer;font-weight:600}
 /* 지면 작업대 — 문제 · 원본 · Claude 를 한 화면에 나란히 두고 각각 따로 스크롤, 체크하는 동안 화면에 고정
    (11-09 사용자 「문제와 해설을 확인하려고 위아래로 계속 스크롤」) */
 .boards{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--toph,60px) + 4px);z-index:4;background:var(--bg);
-  display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr);gap:10px;
-  padding:6px 0 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr);gap:22px;
+  padding:6px 0 12px;border-bottom:1px solid var(--line);margin-bottom:6px}
 .boards[hidden]{display:none}
 .board{display:flex;flex-direction:column;min-width:0;height:var(--bh,58vh)}
 .board>.bh{display:flex;align-items:center;gap:8px;margin:0 0 5px;font-size:.92rem;font-weight:600;flex:none}
-.board .rt{flex:none;font-size:.78rem;color:var(--muted);margin:0 0 5px;cursor:pointer;
+.board .rt{flex:none;font-size:.88rem;line-height:1.5;color:var(--muted);margin:0 0 5px;cursor:pointer;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .board .rt.open{-webkit-line-clamp:unset;overflow:visible;max-height:9em;overflow-y:auto}
-.board .scroll{flex:1;min-height:0;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px}
+.board .scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;
+  background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 .board .scroll .paper{border:0;padding:0;background:none}
 /* 해설은 문제보다 길어서 같은 배율이면 스크롤이 과해진다 — 따로 작게(11-10 사용자) */
-.board.sol .scroll .paper{zoom:var(--zs,.66)}
+.board.sol .scroll .paper{zoom:var(--zs,.61)}
 .bar{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;margin-left:auto;font-size:.82rem;color:var(--muted)}
 .bar .grp{display:inline-flex;align-items:center;gap:4px}
 .bar button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:3px 9px;cursor:pointer;font-size:.82rem}
@@ -121,14 +122,14 @@ details.stem summary{cursor:pointer;font-weight:600}
 
 /* 부분별 비교 행 */
 .part{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
-.part .pname{font-weight:600;font-size:1rem;margin-bottom:8px;display:flex;gap:8px;align-items:baseline}
+.part .pname{font-weight:600;font-size:1.08rem;margin-bottom:8px;display:flex;gap:8px;align-items:baseline}
 .part .pname .k{font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
-.ex{font-size:.9rem;padding:8px 10px;border-radius:7px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
+.ex{font-size:1rem;line-height:1.65;padding:10px 12px;border-radius:7px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
 .ex.orig{background:var(--orig-soft)}
 .ex.claude{background:var(--claude-soft)}
-.ex .lab{display:block;font-size:.72rem;font-weight:600;margin-bottom:2px}
+.ex .lab{display:block;font-size:.8rem;font-weight:600;margin-bottom:2px}
 .ex.orig .lab{color:var(--orig)} .ex.claude .lab{color:var(--claude)}
-.diff{font-size:.86rem;color:var(--muted);margin:8px 0 10px;padding-left:10px;border-left:3px solid var(--line)}
+.diff{font-size:.96rem;line-height:1.6;color:var(--muted);margin:10px 0 12px;padding-left:12px;border-left:3px solid var(--line)}
 .vote{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .seg button{border:0;background:var(--surface);padding:6px 12px;cursor:pointer;font-size:.88rem}
@@ -146,7 +147,7 @@ textarea{width:100%;min-height:2.6em;margin-top:8px;padding:7px 9px;border:1px s
 textarea[readonly]{background:var(--sunk)}
 .saved{font-size:.75rem;color:var(--muted);min-height:1em}
 .others{margin-top:8px;display:flex;flex-direction:column;gap:6px}
-.other{display:flex;gap:8px;align-items:flex-start;font-size:.85rem}
+.other{display:flex;gap:8px;align-items:flex-start;font-size:.95rem}
 .other img{width:20px;height:20px;border-radius:50%;flex:none;margin-top:2px}
 .other .who{font-weight:600}
 .other .txt{white-space:pre-wrap;overflow-wrap:anywhere}
@@ -332,7 +333,7 @@ const typing = () => { const a = document.activeElement; return a && a.tagName =
 const uiGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } };
 const uiSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 let zoom = Math.min(2, Math.max(.5, +uiGet('tiq_zoom', 1) || 1));            // 문제 지면
-let zoomS = Math.min(1.5, Math.max(.4, +uiGet('tiq_zoom_sol', .66) || .66)); // 해설 지면 — 기본을 작게
+let zoomS = Math.min(1.5, Math.max(.4, +uiGet('tiq_zoom_sol', .61) || .61)); // 해설 지면 — 기본을 작게
 let boardsOn = uiGet('tiq_boards', '1') !== '0';
 let introInit = false;
 function applyUI(){
@@ -353,7 +354,7 @@ function applyUI(){
 }
 window.addEventListener('resize', applyUI);
 function setZoom(v){ zoom = Math.min(2, Math.max(.5, Math.round(v * 20) / 20)); uiSet('tiq_zoom', zoom); applyUI(); }
-function setZoomS(v){ zoomS = Math.min(1.5, Math.max(.4, Math.round(v * 20) / 20)); uiSet('tiq_zoom_sol', zoomS); applyUI(); }
+function setZoomS(v){ zoomS = Math.min(1.5, Math.max(.4, Math.round(v * 100) / 100)); uiSet('tiq_zoom_sol', zoomS); applyUI(); }
 
 function board(title, tagCls, imgs, route, alt, sol){
   const b = el('div', 'board' + (sol ? ' sol' : ''));
