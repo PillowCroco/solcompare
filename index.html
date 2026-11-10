@@ -54,16 +54,16 @@ button,input,textarea,select{font:inherit;color:inherit}
 .btn[disabled]{opacity:.5;cursor:default}
 
 /* 본문 격자 */
-.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:24px;padding-block:20px 60px}
-nav.list{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);align-self:start;max-height:calc(100vh - 90px);overflow:auto}
-nav.list h4{margin:14px 0 6px;font-size:.78rem;letter-spacing:.06em;color:var(--muted);font-weight:600}
-nav.list a{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;color:var(--fg);text-decoration:none}
+.layout{display:grid;grid-template-columns:166px minmax(0,1fr);gap:18px;padding-block:20px 60px}
+nav.list{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);align-self:start;max-height:calc(100vh - 90px);overflow:auto;font-size:.86rem}
+nav.list h4{margin:12px 0 4px;font-size:.7rem;letter-spacing:.06em;color:var(--muted);font-weight:600}
+nav.list a{display:flex;align-items:center;gap:6px;padding:3px 7px;border-radius:6px;color:var(--fg);text-decoration:none}
 nav.list a:hover{background:var(--sunk)}
 nav.list a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
-nav.list .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--line);flex:none}
+nav.list .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line);flex:none}
 nav.list .dot.half{background:linear-gradient(90deg,var(--accent) 50%,transparent 50%);border-color:var(--accent)}
 nav.list .dot.done{background:var(--accent);border-color:var(--accent)}
-nav.list .n{margin-left:auto;font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+nav.list .n{margin-left:auto;font-family:var(--f-mono);font-size:.66rem;color:var(--muted)}
 .picker{display:none}
 
 .intro{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:16px}
@@ -102,6 +102,8 @@ details.stem summary{cursor:pointer;font-weight:600}
 .board .rt.open{-webkit-line-clamp:unset;overflow:visible;max-height:9em;overflow-y:auto}
 .board .scroll{flex:1;min-height:0;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px}
 .board .scroll .paper{border:0;padding:0;background:none}
+/* 해설은 문제보다 길어서 같은 배율이면 스크롤이 과해진다 — 따로 작게(11-10 사용자) */
+.board.sol .scroll .paper{zoom:var(--zs,.66)}
 .bar{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;margin-left:auto;font-size:.82rem;color:var(--muted)}
 .bar .grp{display:inline-flex;align-items:center;gap:4px}
 .bar button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:3px 9px;cursor:pointer;font-size:.82rem}
@@ -174,7 +176,7 @@ textarea[readonly]{background:var(--sunk)}
   <div class="brand"><h1>손모 해설 대조</h1><small>2027 손모 1~4회 · 원본 해설 ↔ Claude 블라인드 해설</small></div>
   <div class="sp"></div>
   <div class="me" id="me"><label class="empty" for="nick">이름</label><input id="nick" maxlength="30" placeholder="이름을 적어 주세요" autocomplete="nickname"><span class="chip" id="status">불러오는 중</span></div>
-  <span class="chip" id="prog">0 / 0</span>
+  <span class="chip" id="prog">0 / 0</span><span class="chip" id="adm" hidden>총관리자 · 모두 보임</span>
   <details class="code"><summary class="btn">다른 기기에서 이어 쓰기</summary><div class="codebox"><p>이 기기의 참여 코드: <code id="mycode"></code> <button class="btn" id="copy" type="button">복사</button></p><p><label for="paste">다른 기기에서 받은 코드</label> <input id="paste" maxlength="40"> <button class="btn" id="usecode" type="button">이 코드로 이어 쓰기</button></p></div></details>
 </div></header>
 
@@ -186,7 +188,7 @@ textarea[readonly]{background:var(--sunk)}
       <summary>이 페이지는 무엇이고 어떻게 쓰나 <span class="empty">(눌러 접기)</span></summary>
       <p><b>무엇을 하나요</b> — 원본 해설 작성 방식이 좋다고 고른 25문항을, Claude 가 원본을 보지 않고(발문 · 그림 · 정답만 보고) 해설작성법대로 다시 썼습니다. 두 해설을 부분마다 나란히 놓았습니다.</p>
       <p><b>블라인드 조건</b> — 해설작성법은 손모 해설에서 뽑은 기준이라, 그 문항들을 언급한 대목(인용 · 구조 설명)을 지운 사본만 읽고 썼습니다. 그림은 넣지 못해 Claude 해설은 글과 수식뿐이고, 두 해설 모두 같은 회차 파일 양식으로 한글에서 찍었습니다.</p>
-      <p><b>어떻게</b> — 부분마다 어느 쪽이 나은지 고르고, 이유를 한 줄 남겨 주세요. 로그인은 필요 없습니다 — 맨 위에 이름만 적으면 고르는 즉시 저장되고, 같은 브라우저에서 언제든 다시 고칠 수 있습니다. 다른 참여자의 체크와 코멘트가 아래에 보입니다(30초마다 새로 읽음). 「차이」 줄은 Claude 가 정리한 사실 비교이고 판정이 아닙니다.</p>
+      <p><b>어떻게</b> — 부분마다 어느 쪽이 나은지 고르고, 이유를 한 줄 남겨 주세요. 로그인은 필요 없습니다 — 맨 위에 이름만 적으면 고르는 즉시 저장되고, 같은 브라우저에서 언제든 다시 고칠 수 있습니다. 다른 참여자가 무엇을 골랐는지는 보이지 않으니, 본 대로 골라 주세요. 「차이」 줄은 Claude 가 정리한 사실 비교이고 판정이 아닙니다.</p>
       <div class="legend"><span class="tag orig">원본 해설</span><span class="tag claude">Claude 해설</span><span class="tag same">비슷하다</span></div>
       <p class="note-ro" id="ro" hidden></p>
     </details>
@@ -213,6 +215,17 @@ function gen(){ const a = 'abcdefghijkmnpqrstuvwxyz23456789'; let s = ''; const 
 let myId = lsGet('tiq_rid'); if (!myId || !/^[A-Za-z0-9_-]{12,40}$/.test(myId)) { myId = gen(); lsSet('tiq_rid', myId); }
 let myName = lsGet('tiq_nick') || '';
 let canWrite = true;
+/* 총관리자 — 주소 끝에 ?k=<열쇠> 를 달고 한 번 열면 이 브라우저에 저장된다(주소에서는 지운다).
+   열쇠가 맞을 때만 창구가 남의 줄을 내려 주므로, 참여자는 서로의 체크를 볼 수 없다(11-10 사용자) */
+let ADMIN = lsGet('tiq_admin') || '';
+try {
+  const u = new URL(location.href);
+  const k = u.searchParams.get('k');
+  if (k) { ADMIN = k; lsSet('tiq_admin', k); u.searchParams.delete('k');
+    history.replaceState(null, '', u.pathname + u.search + u.hash); }
+} catch (e) {}
+let seeOthers = false;
+function canSeeOthers(){ return seeOthers; }
 let reviews = {};
 const profiles = {};
 
@@ -272,6 +285,8 @@ function ingest(rows){
   Object.keys(pending).forEach(k => { const q = pending[k]; const it = ((R[myId] = R[myId] || {nick: myName, items: {}}).items[q.pid] = R[myId].items[q.pid] || {parts: {}, overall: {}});
     const o = q.key === '_overall' ? it.overall : (it.parts[q.key] = it.parts[q.key] || {}); if (q.pick != null) o.pick = q.pick; if (q.note != null) o.note = q.note; });
   reviews = R;
+  seeOthers = rows.some(r => r.rid && r.rid !== myId);
+  const ad = $('#adm'); if (ad) ad.hidden = !seeOthers;
 }
 function status(t){ $('#status').textContent = t; }
 const pending = {};
@@ -285,7 +300,7 @@ async function flush(){
   const items = Object.keys(pending).map(k => pending[k]); if (!items.length) return;
   Object.keys(pending).forEach(k => delete pending[k]);
   inflight = true;
-  try { const rows = await call('save', myId, myName, items); ingest(rows); status('저장됨 · ' + new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit'}));
+  try { const rows = await call('save', myId, myName, items, ADMIN); ingest(rows); status('저장됨 · ' + new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit'}));
     if (!typing()) { renderNav(); renderQ(); } else renderNav(); }
   catch (e) { items.forEach(q => { const k = q.pid + '|' + q.key; pending[k] = Object.assign({}, q, pending[k] || {}); }); status('저장 실패 — 다시 시도합니다'); console.warn(e);
     clearTimeout(flushT); flushT = setTimeout(flush, 4000); }
@@ -316,15 +331,18 @@ const typing = () => { const a = document.activeElement; return a && a.tagName =
 /* 지면 작업대 설정 — 크기와 접힘은 이 브라우저에만 기억한다(저장 창구와 무관) */
 const uiGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } };
 const uiSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-let zoom = Math.min(2, Math.max(.5, +uiGet('tiq_zoom', 1) || 1));
+let zoom = Math.min(2, Math.max(.5, +uiGet('tiq_zoom', 1) || 1));            // 문제 지면
+let zoomS = Math.min(1.5, Math.max(.4, +uiGet('tiq_zoom_sol', .66) || .66)); // 해설 지면 — 기본을 작게
 let boardsOn = uiGet('tiq_boards', '1') !== '0';
 let introInit = false;
 function applyUI(){
   document.documentElement.style.setProperty('--z', String(zoom));
+  document.documentElement.style.setProperty('--zs', String(zoomS));
   const top = document.querySelector('header.top');          // 지면 블록이 붙을 자리 = 머리 막대 아래
   if (top) document.documentElement.style.setProperty('--toph', top.offsetHeight + 'px');
   const b = document.getElementById('boards'); if (b) b.hidden = !boardsOn;
   const z = document.getElementById('zval'); if (z) z.textContent = Math.round(zoom * 100) + '%';
+  const zs = document.getElementById('zsval'); if (zs) zs.textContent = Math.round(zoomS * 100) + '%';
   const t = document.getElementById('btoggle'); if (t) t.textContent = boardsOn ? '지면 접기' : '지면 펴기';
   const intro = document.getElementById('intro');            // 안내는 한 번 읽으면 접어 둔다
   if (intro && !introInit){
@@ -335,9 +353,10 @@ function applyUI(){
 }
 window.addEventListener('resize', applyUI);
 function setZoom(v){ zoom = Math.min(2, Math.max(.5, Math.round(v * 20) / 20)); uiSet('tiq_zoom', zoom); applyUI(); }
+function setZoomS(v){ zoomS = Math.min(1.5, Math.max(.4, Math.round(v * 20) / 20)); uiSet('tiq_zoom_sol', zoomS); applyUI(); }
 
-function board(title, tagCls, imgs, route, alt){
-  const b = el('div', 'board');
+function board(title, tagCls, imgs, route, alt, sol){
+  const b = el('div', 'board' + (sol ? ' sol' : ''));
   const bh = el('div', 'bh');
   bh.appendChild(tagCls ? el('span', 'tag ' + tagCls, title) : el('span', null, title));
   b.appendChild(bh);
@@ -366,7 +385,7 @@ function picker(pid, key){
   Object.values(reviews).forEach(r => { const it = (r.items || {})[pid] || {}; const v = key === '_overall' ? (it.overall || {}).pick : ((it.parts || {})[key] || {}).pick; if (t[v] != null) t[v]++; });
   const ty = el('div', 'tally'); ty.title = '모든 참여자 체크 수';
   [['o', '원본', t.orig], ['s', '비슷', t.same], ['c', 'Claude', t.claude]].forEach(([c, l, n]) => { const s = el('span', c); s.append(l + ' ', el('b', null, String(n))); ty.appendChild(s); });
-  box.appendChild(ty);
+  if (canSeeOthers()) box.appendChild(ty);
   return box;
 }
 function noteBox(pid, key){
@@ -378,7 +397,7 @@ function noteBox(pid, key){
   ta.addEventListener('input', () => setNote(pid, key, ta.value, flag));
   wrap.append(ta, flag);
   const others = el('div', 'others');
-  Object.keys(reviews).filter(u => u !== myId).forEach(u => {
+  Object.keys(canSeeOthers() ? reviews : {}).filter(u => u !== myId).forEach(u => {
     const it = ((reviews[u].items || {})[pid]) || {}; const o = key === '_overall' ? (it.overall || {}) : ((it.parts || {})[key] || {});
     if (!o.pick && !o.note) return;
     const row = el('div', 'other');
@@ -403,24 +422,30 @@ function renderQ(){
   const h = el('div', 'qhead');
   h.append(el('h2', null, p.label), el('span', 'meta', `정답 ${p.ans} · ${p.points}점`));
   const bar = el('div', 'bar');
-  const zg = el('span', 'grp');
-  const zm = el('button', null, '−'); zm.type = 'button'; zm.title = '지면 작게';
-  const zv = el('span', 'val'); zv.id = 'zval';
-  const zp = el('button', null, '＋'); zp.type = 'button'; zp.title = '지면 크게';
-  zm.addEventListener('click', () => setZoom(zoom - .1));
-  zp.addEventListener('click', () => setZoom(zoom + .1));
-  zg.append(el('span', null, '지면 크기'), zm, zv, zp);
+  const zgrp = (lab, id, get, set) => {        // 문제와 해설 배율을 따로 — 해설이 훨씬 길다
+    const g = el('span', 'grp');
+    const m = el('button', null, '−'); m.type = 'button'; m.title = lab + ' 지면 작게';
+    const v = el('span', 'val'); v.id = id;
+    const a = el('button', null, '＋'); a.type = 'button'; a.title = lab + ' 지면 크게';
+    m.addEventListener('click', () => set(get() - .05));
+    a.addEventListener('click', () => set(get() + .05));
+    g.append(el('span', null, lab), m, v, a);
+    return g;
+  };
+  bar.append(el('span', null, '지면 크기'),
+             zgrp('문제', 'zval', () => zoom, setZoom),
+             zgrp('해설', 'zsval', () => zoomS, setZoomS));
   const bt = el('button', null, ''); bt.type = 'button'; bt.id = 'btoggle';
   bt.addEventListener('click', () => { boardsOn = !boardsOn; uiSet('tiq_boards', boardsOn ? '1' : '0'); applyUI(); });
-  bar.append(zg, bt);
+  bar.append(bt);
   h.appendChild(bar);
   q.appendChild(h);
 
   /* 문제 · 원본 해설 · Claude 해설을 한 화면에 — 각각 따로 스크롤하고, 아래 체크를 하는 동안 화면에 붙어 있다 */
   const boards = el('div', 'boards'); boards.id = 'boards';
   boards.append(board('문제', null, [p.stem], '', '문제'),
-                board('원본 해설', 'orig', p.orig, p.routes.orig, '원본 해설'),
-                board('Claude 해설', 'claude', p.claude, p.routes.claude, 'Claude 해설'));
+                board('원본 해설', 'orig', p.orig, p.routes.orig, '원본 해설', true),
+                board('Claude 해설', 'claude', p.claude, p.routes.claude, 'Claude 해설', true));
   q.appendChild(boards);
 
   const s2 = el('section', 'sec'); const h3 = el('h3', null, '부분별 비교'); h3.appendChild(el('small', null, '부분마다 어느 쪽이 나은지 — 같은 자리를 다르게 쓴 곳'));
@@ -468,7 +493,7 @@ $('#usecode').addEventListener('click', () => {
 renderNav(); renderQ();
 async function refresh(){
   if (document.visibilityState === 'hidden' || inflight || Object.keys(pending).length) return;
-  try { ingest(await call('getAll')); status(myName ? '체크 저장됨' : '이름을 적으면 저장됩니다'); if (!typing()) { renderNav(); renderQ(); } else renderNav(); }
+  try { ingest(await call('getAll', myId, ADMIN)); status(myName ? '체크 저장됨' : '이름을 적으면 저장됩니다'); if (!typing()) { renderNav(); renderQ(); } else renderNav(); }
   catch (e) { status('불러오기 실패'); console.warn(e); }
 }
 refresh(); setInterval(refresh, 30000);
