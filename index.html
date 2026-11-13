@@ -315,6 +315,7 @@ function ingest(rows){
   const ab = $('#admbox'); if (ab) ab.hidden = !(seeOthers && ADMIN);
 }
 function status(t){ $('#status').textContent = t; }
+let lastSig = null;                        // 마지막으로 그린 시트 내용 — 같으면 다시 그리지 않는다(11-13)
 const pending = {};
 let flushT = null, inflight = false;
 function queue(pid, key, patch){
@@ -326,7 +327,8 @@ async function flush(){
   const items = Object.keys(pending).map(k => pending[k]); if (!items.length) return;
   Object.keys(pending).forEach(k => delete pending[k]);
   inflight = true;
-  try { const rows = await call('save', myId, myName, items, ADMIN); ingest(rows); status('저장됨 · ' + new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit'}));
+  try { const rows = await call('save', myId, myName, items, ADMIN); lastSig = JSON.stringify(rows); ingest(rows);
+    status('저장됨 · ' + new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit'}));
     if (!typing()) { renderNav(); renderQ(); } else renderNav(); }
   catch (e) { items.forEach(q => { const k = q.pid + '|' + q.key; pending[k] = Object.assign({}, q, pending[k] || {}); }); status('저장 실패 — 다시 시도합니다'); console.warn(e);
     clearTimeout(flushT); flushT = setTimeout(flush, 4000); }
@@ -455,6 +457,11 @@ function pics(list, alt){ const d = el('div', 'paper'); list.forEach((u, i) => {
 function renderQ(){
   const p = byHash[cur]; const q = $('#q');
   const keepY = window.scrollY; const active = document.activeElement && document.activeElement.id;
+  /* 같은 문항을 다시 그릴 때는 칸 안쪽 스크롤 자리를 그대로 둔다 — 체크를 저장하거나 시트를 새로 읽을 때마다
+     화면을 다시 그리는데, 그때 지면이 맨 위로 올라가 버렸다(11-13 제보). 문항이 바뀌면 맨 위에서 시작한다. */
+  const sameQ = renderQ.last === cur;
+  const tops = sameQ ? Array.prototype.map.call(q.querySelectorAll('.board .scroll'), e => e.scrollTop) : [];
+  renderQ.last = cur;
   q.textContent = '';
   const h = el('div', 'qhead');
   h.append(el('h2', null, p.label), el('span', 'meta', `정답 ${p.ans} · ${p.points}점`));
@@ -515,6 +522,13 @@ function renderQ(){
   const c = el('div', 'part overall'); c.appendChild(picker(p.id, '_overall')); c.appendChild(noteBox(p.id, '_overall'));
   s3.appendChild(c); q.appendChild(s3);
   applyUI();
+  if (tops.length){                       // 그림이 자리를 잡은 뒤 한 번 더 — 데이터 URI 라도 늦게 그려질 수 있다
+    const sc = q.querySelectorAll('.board .scroll');
+    const put = () => sc.forEach((e, i) => { if (tops[i] != null && e.scrollTop !== tops[i]) e.scrollTop = tops[i]; });
+    put();
+    requestAnimationFrame(put);
+    setTimeout(put, 150);
+  }
   window.scrollTo(0, keepY);
   if (active){ const a = document.getElementById(active); if (a){ a.focus(); try { a.selectionStart = a.selectionEnd = a.value.length; } catch (e) {} } }
 }
@@ -552,7 +566,15 @@ $('#usecode').addEventListener('click', () => {
 renderNav(); renderQ();
 async function refresh(){
   if (document.visibilityState === 'hidden' || inflight || Object.keys(pending).length) return;
-  try { ingest(await call('getAll', myId, ADMIN)); status(myName ? '체크 저장됨' : '이름을 적으면 저장됩니다'); if (!typing()) { renderNav(); renderQ(); } else renderNav(); }
+  try {
+    const rows = await call('getAll', myId, ADMIN);
+    const sig = JSON.stringify(rows);
+    ingest(rows);
+    status(myName ? '체크 저장됨' : '이름을 적으면 저장됩니다');
+    if (sig === lastSig) return;           // 시트가 그대로면 화면을 건드리지 않는다
+    lastSig = sig;
+    if (!typing()) { renderNav(); renderQ(); } else renderNav();
+  }
   catch (e) { status('불러오기 실패'); console.warn(e); }
 }
 refresh(); setInterval(refresh, 30000);
