@@ -193,7 +193,7 @@ textarea[readonly]{background:var(--sunk)}
   <div class="sp"></div>
   <div class="me" id="me"><label class="empty" for="nick">이름</label><input id="nick" maxlength="30" placeholder="이름을 적어 주세요" autocomplete="nickname"><span class="chip" id="status">불러오는 중</span></div>
   <span class="chip" id="prog">0 / 0</span><span class="chip" id="adm" hidden>총관리자 · 모두 보임</span>
-  <details class="code"><summary class="btn">다른 기기에서 이어 쓰기</summary><div class="codebox"><p><b>이 브라우저에서는 그대로 이어집니다</b> — 다시 와서 이름을 적지 않아도 고른 것이 그대로 있습니다.</p><p>다른 기기(폰 등)에서 이어 하려면 <b>이어 쓰기 링크</b>를 그 기기에서 한 번 열어 주세요. 그 뒤로는 그 기기에서도 그대로 이어집니다.</p><p><button class="btn" id="copylink" type="button">이어 쓰기 링크 복사</button> <span class="saved" id="copied"></span></p><details class="sub"><summary>링크 대신 코드로</summary><p>이 기기의 참여 코드: <code id="mycode"></code> <button class="btn" id="copy" type="button">복사</button></p><p><label for="paste">다른 기기에서 받은 코드</label> <input id="paste" maxlength="40"> <button class="btn" id="usecode" type="button">이 코드로 이어 쓰기</button></p></details></div></details>
+  <details class="code"><summary class="btn">다른 기기에서 이어 쓰기</summary><div class="codebox"><p><b>이 브라우저에서는 그대로 이어집니다</b> — 다시 와서 이름을 적지 않아도 고른 것이 그대로 있습니다.</p><p>다른 기기(폰 등)에서 이어 하려면 <b>이어 쓰기 링크</b>를 그 기기에서 한 번 열어 주세요. 그 뒤로는 그 기기에서도 그대로 이어집니다.</p><p><button class="btn" id="copylink" type="button">이어 쓰기 링크 복사</button> <span class="saved" id="copied"></span></p><p id="admbox" hidden><b>총관리자 링크</b> — 다른 기기에서 남의 체크까지 보려면 이 주소를 그 기기에서 한 번 열면 됩니다. <button class="btn" id="copyadm" type="button">총관리자 링크 복사</button> <span class="saved" id="admcopied"></span></p><details class="sub"><summary>링크 대신 코드로</summary><p>이 기기의 참여 코드: <code id="mycode"></code> <button class="btn" id="copy" type="button">복사</button></p><p><label for="paste">다른 기기에서 받은 코드</label> <input id="paste" maxlength="40"> <button class="btn" id="usecode" type="button">이 코드로 이어 쓰기</button></p></details></div></details>
 </div></header>
 
 <div class="wrap"><div class="layout">
@@ -312,6 +312,7 @@ function ingest(rows){
   reviews = R;
   seeOthers = rows.some(r => r.rid && r.rid !== myId);
   const ad = $('#adm'); if (ad) ad.hidden = !seeOthers;
+  const ab = $('#admbox'); if (ab) ab.hidden = !(seeOthers && ADMIN);
 }
 function status(t){ $('#status').textContent = t; }
 const pending = {};
@@ -528,6 +529,11 @@ nick.addEventListener('change', () => {
 });
 $('#mycode').textContent = myId;
 const resumeLink = () => location.origin + location.pathname + '?u=' + myId;
+$('#copyadm').addEventListener('click', () => {
+  const u = location.origin + location.pathname + '?k=' + ADMIN, f = $('#admcopied');
+  if (navigator.clipboard) navigator.clipboard.writeText(u).then(() => { f.textContent = '복사했습니다'; }).catch(() => { f.textContent = u; });
+  else f.textContent = u;
+});
 $('#copylink').addEventListener('click', () => {
   const u = resumeLink(), f = $('#copied');
   if (navigator.clipboard) navigator.clipboard.writeText(u).then(() => { f.textContent = '복사했습니다'; }).catch(() => { f.textContent = u; });
