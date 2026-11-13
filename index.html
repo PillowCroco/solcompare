@@ -97,8 +97,8 @@ details.stem summary{cursor:pointer;font-weight:600}
    (11-09 사용자 「문제와 해설을 확인하려고 위아래로 계속 스크롤」) */
 .boards{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--toph,60px) + 4px);z-index:4;background:var(--bg);
   display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr);gap:38px;
-  padding:6px 0 14px;border-bottom:1px solid var(--line);margin-bottom:6px;
-  height:var(--bh,42vh);min-height:180px;max-height:88vh;overflow:hidden;resize:vertical;
+  padding:6px 0 20px;margin-bottom:6px;
+  height:var(--bh,42vh);min-height:180px;max-height:88vh;overflow:hidden;
   grid-template-rows:minmax(0,1fr)}   /* 줄 높이를 작업대에 맞춰 못박는다 — auto 면 칸이 내용만큼 커져 잘린다 */
 .boards[hidden]{display:none}
 .board{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%}
@@ -111,13 +111,21 @@ details.stem summary{cursor:pointer;font-weight:600}
 .board .scroll .paper{border:0;padding:0;background:none}
 /* 해설은 문제보다 길어서 같은 배율이면 스크롤이 과해진다 — 따로 작게(11-10 사용자) */
 .board.sol .scroll .paper{zoom:var(--zs,.61)}
+/* 작업대 높이 조절 바 — 아래 폭 전체(11-13 사용자 「가시성 높고 잘 눌리게」).
+   .boards 가 sticky 라 자리 잡는 기준이 되어 준다. 기본 resize 모서리는 작아서 안 보였다 */
+.bgrip{position:absolute;left:0;right:0;bottom:0;height:18px;display:flex;align-items:center;justify-content:center;
+  gap:6px;cursor:ns-resize;touch-action:none;user-select:none;background:var(--sunk);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.bgrip::before,.bgrip::after{content:"";width:46px;height:4px;border-radius:999px;background:var(--muted);opacity:.55}
+.bgrip em{font-style:normal;font-size:.72rem;color:var(--muted);letter-spacing:.02em}
+.bgrip:hover,.bgrip:focus-visible,.bgrip.on{background:var(--accent-soft)}
+.bgrip:hover::before,.bgrip:hover::after,.bgrip.on::before,.bgrip.on::after{background:var(--accent);opacity:1}
+.bgrip:hover em,.bgrip.on em{color:var(--accent)}
 .bar{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;margin-left:auto;font-size:.82rem;color:var(--muted)}
 .bar .grp{display:inline-flex;align-items:center;gap:4px}
 .bar button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:3px 9px;cursor:pointer;font-size:.82rem}
 .bar button:hover{border-color:var(--accent)}
 .bar .val{font-family:var(--f-mono);min-width:3.4em;text-align:center}
-.bar .hint{font-size:.78rem;opacity:.75}
-@media (max-width:1180px){.bar .hint{display:none}}
 
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .two>*{min-width:0}
@@ -170,7 +178,8 @@ textarea[readonly]{background:var(--sunk)}
 .empty{color:var(--muted);font-size:.85rem}
 
 @media (max-width:1180px){          /* 좁으면 지면을 세로로 쌓고 고정하지 않는다 */
-  .boards{position:static;grid-template-columns:minmax(0,1fr);gap:18px;height:auto;max-height:none;resize:none}
+  .boards{position:static;grid-template-columns:minmax(0,1fr);gap:18px;height:auto;max-height:none;padding-bottom:0}
+  .bgrip{display:none}
   .board{height:auto;max-height:72vh}
   .board .scroll{max-height:66vh}
 }
@@ -373,12 +382,6 @@ function applyUI(){
     b.hidden = !boardsOn;
     const h = uiGet('tiq_bh', '');
     if (h && !b.dataset.sized){ b.style.height = h; b.dataset.sized = '1'; }
-    if (!b.dataset.watch && window.ResizeObserver){      // 끌어서 바꾼 높이를 기억한다
-      b.dataset.watch = '1';
-      let t = null;
-      new ResizeObserver(() => { clearTimeout(t); t = setTimeout(() => {
-        if (b.style.height) uiSet('tiq_bh', b.style.height); }, 400); }).observe(b);
-    }
   }
   const z = document.getElementById('zval'); if (z) z.textContent = Math.round(zoom * 100) + '%';
   const zs = document.getElementById('zsval'); if (zs) zs.textContent = Math.round(zoomS * 100) + '%';
@@ -391,6 +394,31 @@ function applyUI(){
   }
 }
 window.addEventListener('resize', applyUI);
+/* 조절 바를 끌어 작업대 높이를 바꾼다 — 끝나면 그 브라우저에 적어 둔다. 두 번 누르면 기본 높이로 */
+function gripDrag(boards, grip){
+  const lo = 180, hi = () => Math.round(window.innerHeight * .88);
+  const put = h => { boards.style.height = Math.round(Math.max(lo, Math.min(hi(), h))) + 'px'; };
+  let id = null, y0 = 0, h0 = 0;
+  grip.addEventListener('pointerdown', e => {
+    id = e.pointerId; y0 = e.clientY; h0 = boards.getBoundingClientRect().height;
+    grip.setPointerCapture(id); grip.classList.add('on'); e.preventDefault();
+  });
+  grip.addEventListener('pointermove', e => { if (id !== null) put(h0 + e.clientY - y0); });
+  const end = () => {
+    if (id === null) return;
+    try { grip.releasePointerCapture(id); } catch (e) {}
+    id = null; grip.classList.remove('on'); uiSet('tiq_bh', boards.style.height);
+  };
+  grip.addEventListener('pointerup', end);
+  grip.addEventListener('pointercancel', end);
+  grip.addEventListener('dblclick', () => { boards.style.height = ''; uiSet('tiq_bh', ''); });
+  grip.addEventListener('keydown', e => {
+    const d = e.key === 'ArrowUp' ? -32 : e.key === 'ArrowDown' ? 32 : 0;
+    if (!d) return;
+    e.preventDefault(); put(boards.getBoundingClientRect().height + d); uiSet('tiq_bh', boards.style.height);
+  });
+}
+
 function setZoom(v){ zoom = Math.min(2, Math.max(.5, Math.round(v * 20) / 20)); uiSet('tiq_zoom', zoom); applyUI(); }
 function setZoomS(v){ zoomS = Math.min(1.5, Math.max(.4, Math.round(v * 100) / 100)); uiSet('tiq_zoom_sol', zoomS); applyUI(); }
 
@@ -478,8 +506,7 @@ function renderQ(){
   };
   bar.append(el('span', null, '지면 크기'),
              zgrp('문제', 'zval', () => zoom, setZoom),
-             zgrp('해설', 'zsval', () => zoomS, setZoomS),
-             el('span', 'hint', '높이는 작업대 아래 끝을 끌어서'));
+             zgrp('해설', 'zsval', () => zoomS, setZoomS));
   const bt = el('button', null, ''); bt.type = 'button'; bt.id = 'btoggle';
   bt.addEventListener('click', () => { boardsOn = !boardsOn; uiSet('tiq_boards', boardsOn ? '1' : '0'); applyUI(); });
   bar.append(bt);
@@ -491,6 +518,15 @@ function renderQ(){
   boards.append(board('문제', null, [p.stem], '', '문제'),
                 board('원본 해설', 'orig', p.orig, p.routes.orig, '원본 해설', true),
                 board('Claude 해설', 'claude', p.claude, p.routes.claude, 'Claude 해설', true));
+  const grip = el('div', 'bgrip');
+  grip.appendChild(el('em', null, '끌어서 높이 조절'));
+  grip.tabIndex = 0;
+  grip.title = '위아래로 끌면 지면 칸 높이가 바뀝니다 (두 번 누르면 기본 높이, 방향키로도 됩니다)';
+  grip.setAttribute('role', 'separator');
+  grip.setAttribute('aria-orientation', 'horizontal');
+  grip.setAttribute('aria-label', '지면 작업대 높이');
+  boards.appendChild(grip);
+  gripDrag(boards, grip);
   q.appendChild(boards);
 
   const s2 = el('section', 'sec'); const h3 = el('h3', null, '부분별 비교'); h3.appendChild(el('small', null, '부분마다 어느 쪽이 나은지 — 같은 자리를 다르게 쓴 곳'));
